@@ -1,0 +1,19 @@
+body {
+    background-image: url("/assets/images/background.png");
+    padding-top: 60px;
+}
+
+h1,
+p,
+h2,
+h3,
+a,
+.panel,
+.nav {
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.panel {
+    font-size: 1.5em;
+}
+
