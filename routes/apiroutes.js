@@ -1,14 +1,14 @@
 var express = require('express'),
     axios = require('axios'),
     cheerio = require('cheerio'),
-    db = require('../models');
+    dbase = require('../models');
 
 // Create router
 const router = express.Router();
 
 //GET requests to render Handlebars pages
 router.get("/", function(req, res) {
-  db.Article.find({"saved": false}, function(error, data) {
+  dbase.Article.find({"saved": false}, function(error, data) {
     var hbsObject = {
       article: data
     };
@@ -18,7 +18,7 @@ router.get("/", function(req, res) {
 });
 
 router.get("/saved", function(req, res) {
-  db.Article.find({"saved": true}).populate("notes").exec(function(error, articles) {
+  dbase.Article.find({"saved": true}).populate("notes").exec(function(error, articles) {
     var hbsObject = {
       article: articles
     };
@@ -26,26 +26,28 @@ router.get("/saved", function(req, res) {
   });
 });
 
-// A GET request to scrape the echojs website
+// A GET request
 router.get("/scrape", function(req, res) {
   // First, we grab the body of the html with request
-  axios.get("https://www.nytimes.com/", function(error, response, html) {
+  axios.get("https://www.nytimes.com/").then(function(html) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
-    var $ = cheerio.load(html);
+    console.log(html.data);
+    var $ = cheerio.load(html.data);
 
     // Now, we grab every h2 within an article tag, and do the following:
     $("article.css-8atqhb").each(function(i, element) {
       // Save an empty result object
       var result = {};
-
+    
      // Add the title and summary of every link, and save them as properties of the result object
      //::::these next 3 lines seemed to be the most important in the whole code:::::
      
      result.title = $(this).find("h2").text();
      result.summary = $(this).find("p").text();
      result.link = $(this).find("a").attr("href");
+     
 
-      // Using our db.Article model, create a new entry
+      // Using our dbase.Article model, create a new entry
       // This effectively passes the result object to the entry (and the title and link)
       var entry = new db.Article(result);
 
@@ -71,7 +73,7 @@ router.get("/scrape", function(req, res) {
 // This will get the articles we scraped from the mongoDB
 router.get("/articles", function(req, res) {
   // Grab every doc in the Articles array
-  db.Article.find({}, function(error, doc) {
+  dbase.Article.find({}, function(error, doc) {
     // Log any errors
     if (error) {
       console.log(error);
@@ -86,7 +88,7 @@ router.get("/articles", function(req, res) {
 // Grab an article by it's ObjectId
 router.get("/articles/:id", function(req, res) {
   // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
-  db.Article.findOne({ "_id": req.params.id })
+  dbase.Article.findOne({ "_id": req.params.id })
   // ..and populate all of the notes associated with it
   .populate("note")
   // now, execute our query
@@ -106,7 +108,7 @@ router.get("/articles/:id", function(req, res) {
 // Save an article
 router.post("/articles/save/:id", function(req, res) {
       // Use the article id to find and update its saved boolean
-      db.Article.findOneAndUpdate({ "_id": req.params.id }, { "saved": true})
+      dbase.Article.findOneAndUpdate({ "_id": req.params.id }, { "saved": true})
       // Execute the above query
       .exec(function(err, doc) {
         // Log any errors
@@ -123,7 +125,7 @@ router.post("/articles/save/:id", function(req, res) {
 // Delete an article
 router.post("/articles/delete/:id", function(req, res) {
       // Use the article id to find and update its saved boolean
-      db.Article.findOneAndUpdate({ "_id": req.params.id }, {"saved": false, "notes": []})
+      dbase.Article.findOneAndUpdate({ "_id": req.params.id }, {"saved": false, "notes": []})
       // Execute the above query
       .exec(function(err, doc) {
         // Log any errors
@@ -155,7 +157,7 @@ router.post("/notes/save/:id", function(req, res) {
     // Otherwise
     else {
       // Use the article id to find and update it's notes
-      db.Article.findOneAndUpdate({ "_id": req.params.id }, {$push: { "notes": note } })
+      dbase.Article.findOneAndUpdate({ "_id": req.params.id }, {$push: { "notes": note } })
       // Execute the above query
       .exec(function(err) {
         // Log any errors
@@ -182,7 +184,7 @@ router.delete("/notes/delete/:note_id/:article_id", function(req, res) {
       res.send(err);
     }
     else {
-      db.Article.findOneAndUpdate({ "_id": req.params.article_id }, {$pull: {"notes": req.params.note_id}})
+      dbase.Article.findOneAndUpdate({ "_id": req.params.article_id }, {$pull: {"notes": req.params.note_id}})
        // Execute the above query
         .exec(function(err) {
           // Log any errors
