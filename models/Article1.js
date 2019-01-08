@@ -1,4 +1,4 @@
-// Require mongoose
+// Require mongoose 
 var mongoose = require("mongoose");
 var Note = require("./Note");
 // Create Schema class
