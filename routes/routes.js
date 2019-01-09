@@ -46,7 +46,7 @@ router.get("/scrape", function(req, res) {
      
      result.title = $(this).find("h2").text();
      result.summary = $(this).find("p").text();
-     result.link = "https://www.nytimes.com/" + $(this).find("a").attr("href");
+     result.link = "https://www.nytimes.com" + $(this).find("a").attr("href");
      
 
       // Using our dbase.Article model, create a new entry
