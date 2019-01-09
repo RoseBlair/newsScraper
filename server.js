@@ -2,17 +2,8 @@
 var express = require("express");
 var mongoose = require("mongoose");
 var path = require("path");
-var axios = require("axios");
 
-// Requiring Note and Article models
-var Note = require("./models/Note.js");
-var Article = require("./models/Article.js");
-
-// Scraping tools
-var request = require("request");
-var cheerio = require("cheerio");
-
-var apiRoutes = require('./routes/apiroutes');
+var routes = require('./routes/routes');
 
 // Initialize Express
 var app = express();
@@ -23,7 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 //Add Routes
-app.use(apiRoutes);
+app.use(routes);
 
 // Make public a static dir
 app.use(express.static("public"));

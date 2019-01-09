@@ -3,6 +3,8 @@ var express = require('express'),
     cheerio = require('cheerio'),
     dbase = require('../models');
 
+var Note = require('../models/Note.js');
+
 // Create router
 const router = express.Router();
 
@@ -44,12 +46,12 @@ router.get("/scrape", function(req, res) {
      
      result.title = $(this).find("h2").text();
      result.summary = $(this).find("p").text();
-     result.link = $(this).find("a").attr("href");
+     result.link = "https://www.nytimes.com/" + $(this).find("a").attr("href");
      
 
       // Using our dbase.Article model, create a new entry
       // This effectively passes the result object to the entry (and the title and link)
-      var entry = new db.Article(result);
+      var entry = new dbase.Article(result);
 
       // Now, save that entry to the db
       entry.save(function(err, doc) {
@@ -143,7 +145,7 @@ router.post("/articles/delete/:id", function(req, res) {
 // Create a new note
 router.post("/notes/save/:id", function(req, res) {
   // Create a new note and pass the req.body to the entry
-  var newNote = new Note({
+  var newNote = new dbase.Note({
     body: req.body.text,
     article: req.params.id
   });
